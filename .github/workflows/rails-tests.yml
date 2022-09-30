@@ -37,6 +37,8 @@ jobs:
           POSTGRES_DB: asakusa_satellite_test
 
     steps:
+      - name: debug cwd
+        run: pwd
       - name: Make bin/ci executable
         run: chmod +x ./bin/ci
       - name: Run RSpec test
