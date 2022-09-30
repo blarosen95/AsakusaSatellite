@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: debug cwd
-        run: ls
+        run: ls ../
       - name: Make bin/ci executable
         run: chmod +x ./bin/ci
       - name: Run RSpec test
