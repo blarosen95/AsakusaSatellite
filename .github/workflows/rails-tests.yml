@@ -1,0 +1,51 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # ruby: [ '2.6.x', '2.5.x' ]
+        # N parallel jobs to run tests on.
+        # Higher value desired if there are slow tests, in order to split onto more jobs.
+        # Remember to update ci_node_index to 0..N-1
+        ci_node_total: [2]
+        # Set N-1 indices for parallel jobs.
+        # When running 2 parallel jobs, the first will have index 0 and the second will have index 1, etc.
+        ci_node_index: [0, 1]
+    env:
+      BUNDLE_JOBS: 2
+      BUNDLE_RETRY: 3
+      BUNDLE_PATH: vendor/bundle
+      PGHOST: 127.0.0.1
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      RAILS_ENV: test
+    services:
+      postgres:
+        image: postgres:9.6-alpine
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: asakusa_satellite_test
+
+    steps:
+      - name: Make bin/ci executable
+        run: chmod +x ./bin/ci
+      - name: Run RSpec test
+        id: rspec-test
+        env:
+          # Specifies # jobs in parallel (used for partitioning).
+          CI_NODE_TOTAL: ${{ matrix.ci_node_total }}
+          # Use the index from matrix as an environment variable.
+          CI_NODE_INDEX: ${{ matrix.ci_node_index }}
+        continue-on-error: true
+        run : |
+          ./bin/ci
